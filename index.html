@@ -1,18 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
 <body>
     <h1>Courses</h1>
     <select name="list" id="list"></select>
-    <div id="courseTarget">?</div>
+    <div id="courseTarget">?</div><br>
     <button id="saveBtn">Save</button>
     <button id="deleteBtn">Delete</button>
+    <button id="newBtn">Clear Form</button>
     <script>
         function render(data) {
-            data.forEach(o => list.appendChild(new Option(o.courseName + " - #" + o.id, o.id)));
+            data.forEach(o => list.appendChild(new Option(o.courseName, o.id, o.id)));
+        }
+
+        function blank() {
+            courseTarget.innerHTML = `
+                    <label>Course Id:<br> <input value="" id="courseId"><br></label>
+                    <label>Course Name:<br> <input value="" id="courseName"></label><br>
+                    <label>Course Department:<br> <input value="" id="courseDept"></label><br>
+                    <label>Course Number:<br> <input type ="number" value="" id="courseNum"></label><br>
+                    <label>Course Instructor:<br> <input value="" id="instructor"></label><br>
+                    <label>Course Start Date:<br> <input type="date" value="" id="startDate"></label><br>
+                    <label>Course Number of Days:<br> <input value="" id="numDays"></label><br>
+                    `;
+        };
+
+        async function save() {
+            const bodyData = {
+                // "courseId": courseId.value,
+                "courseName": courseName.value,
+                "dept": courseDept.value,
+                "courseNum": courseNum.value,
+                "instructor": instructor.value,
+                "startDate": startDate.value,
+                "numDays": numDays.value
+            };
+            if (courseId.value) {
+                //Regular save PUT UPDATE
+                const req = await fetch("http://127.0.0.1:8081/api/courses/" + courseId.value, {
+                    method: "PUT",
+                    body: JSON.stringify(bodyData),
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    }
+                });
+                blank();
+            } else {
+                //New save POST CREATE
+                const req = await fetch("http://127.0.0.1:8081/api/courses/", {
+                    method: "POST",
+                    body: JSON.stringify(bodyData),
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    }
+                });
+                const data = await req.json();
+                // courseId.value = data.id;
+            }
+            window.location.reload();
         }
         document.addEventListener("DOMContentLoaded", async () => {
+            newBtn.addEventListener("click", blank)
+            saveBtn.addEventListener("click", save)
             list.addEventListener("change", () => {
-                const courseId = list.value;
-                const course = data.find(o => o.id == courseId);
-                const inputDate = new Date(course.startDate + " 2024");
+
+                const courseid = list.value;
+                const course = data.find(o => o.id == courseid);
+                let inputDate = new Date(course.startDate)
+                if (course.startDate.length != 10) {
+                    inputDate = new Date(course.startDate + " 2024");
+                };
 
                 const year = inputDate.getFullYear();
                 const month = (inputDate.getMonth() + 1).toString().padStart(2, "0");
@@ -20,35 +83,31 @@
                 const formattedDate = `${year}-${month}-${day}`;
 
                 courseTarget.innerHTML = `
-                <label>Course ID: <br> <input value="${course.id}" id="courseId" readonly="readonly"></label><br>
-                <label>Course Name: <br> <input value="${course.courseName}" id="courseName"></label><br>
-                <label>Course Deparment: <br> <input value="${course.dept}" id="courseDept"></label><br>
-                <label>Course Number: <br> <input type="number" value="${course.courseNum}" id="courseNum"></label><br>
-                <label>Course Instructor: <br> <input value="${course.instructor}" id="instructor"></label><br>
-                <label>Course Start Date: <br> <input type="date" value="${formattedDate}" id="startDate"></label><br>
-                <label>Course Number of Days: <br> <input type="number" value="${course.numDays}" id="numDays"></label><br>
-                `;
-            }); // end change listener
+                    <label>Course Id:<br> <input value="${course.id}" id="courseId"><br></label>
+                    <label>Course Name:<br> <input value="${course.courseName}" id="courseName"></label><br>
+                    <label>Course Department:<br> <input value="${course.dept}" id="courseDept"></label><br>
+                    <label>Course Number:<br> <input type ="number" value="${course.courseNum}" id="courseNum"></label><br>
+                    <label>Course Instructor:<br> <input value="${course.instructor}" id="instructor"></label><br>
+                    <label>Course Start Date:<br> <input type="date" value="${formattedDate}" id="startDate"></label><br>
+                    <label>Course Number of Days:<br> <input value="${course.numDays}" id="numDays"></label><br>
+                    `;
+            });
 
-            // Using .then() instead of async and await
-            // fetch("http://localhost:8081/api/courses/", {
+            // fetch("http://127.0.0.1:8081/api/courses/", {
             //     method: "GET"
-            // }).then(req => req.json()).then(render)
-
-            // Using async and await instead of .then()
-            const req = await fetch("http://localhost:8081/api/courses", {
+            // }).then(req => req.json().then(data =>{
+            //     data.forEach(o => list.appendChild(new Option(o.courseName, o.id)))
+            // }))
+            const req = await fetch("http://127.0.0.1:8081/api/courses/", {
                 method: "GET"
-            }); // get json text
+            });
+            const data = await req.json();
 
-            const data = await req.json(); // parse
-            // Same as end of line 13
+            window.data = data;
             render(data);
-
-            window.data = data; // Make global var
-            // Or
-            // render(await req.json());
-            // parse and then call render without data var
-
-        }); // end load
+            blank();
+        });
     </script>
 </body>
+
+</html>
