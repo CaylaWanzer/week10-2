@@ -31,6 +31,15 @@
                     `;
         };
 
+        async function del(){
+            const r = await fetch("http://127.0.0.1:8081/api/courses/" + courseId.value, {
+                method: "DELETE",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8"
+                    }
+            });
+            window.location.reload()
+        };
         async function save() {
             const bodyData = {
                 // "courseId": courseId.value,
@@ -68,6 +77,7 @@
         document.addEventListener("DOMContentLoaded", async () => {
             newBtn.addEventListener("click", blank)
             saveBtn.addEventListener("click", save)
+            deleteBtn.addEventListener("click", del)
             list.addEventListener("change", () => {
 
                 const courseid = list.value;
